@@ -20,7 +20,7 @@ export default class HomeScreen extends React.Component {
 	render() {
 		return (
 			<View style={styles.container}>
-				<CameraComponent />
+				<CameraComponent navigation={this.props.navigation} />
 		 	</View>
 		);
 	}
