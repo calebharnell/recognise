@@ -1,12 +1,16 @@
 import React from 'react';
 import { Dimensions, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { withNavigation } from 'react-navigation';
 import * as Permissions from 'expo-permissions';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Camera } from 'expo-camera';
 import { CLARIFAI_API_KEY } from 'react-native-dotenv';
 import CaptureButton from './CaptureButton'
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { addResults } from '../ResultsActions';
 
-export default class CameraComponent extends React.Component {
+class CameraComponent extends React.Component {
 	constructor(props) {
 		super(props);
     this.state = { 
@@ -60,7 +64,8 @@ export default class CameraComponent extends React.Component {
 		// Identify the image
 		app.models.predict(Clarifai.FOOD_MODEL, {base64: imageData})
 			.then((response) => {
-				this.displayAnswer(`${response.outputs[0].data.concepts[0].name}`)
+				this.props.addResults(response.outputs[0].data.concepts.slice(0,5))
+				this.displayAnswer(`${response.outputs[0].data.concepts[0].name} - ${parseInt((response.outputs[0].data.concepts[0].value) * 100)}%`)
 			})
 			.catch((err) => alert(err))
 	}
@@ -77,6 +82,16 @@ export default class CameraComponent extends React.Component {
 		Alert.alert(
 			this.state.identifedAs,
 			'',
+			[
+				{
+					text: 'Ok',
+					style: 'cancel',
+				},
+				{
+					text: 'See More',
+					onPress: () => this.props.navigation.navigate('Results'),
+				},
+			],
 			{ cancelable: false }
 		  )
 
@@ -108,3 +123,11 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	}
 });
+
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    addResults,
+  }, dispatch)
+);
+
+export default connect(null, mapDispatchToProps)(CameraComponent);
